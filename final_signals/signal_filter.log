@@ -1,0 +1,22 @@
+2026-06-28 11:41:23 INFO 沪深300低于20日线，最多持仓3只
+2026-06-28 11:41:23 INFO 最终信号已保存: rows=3, E:\private_work\A-kid\final_signals\final_signals.csv, E:\private_work\A-kid\final_signals\final_signals.xlsx
+2026-06-28 16:34:14 INFO 沪深300低于20日线，最多持仓3只
+2026-06-28 16:34:14 INFO 最终信号已保存: rows=0, E:\private_work\A-kid\final_signals\final_signals.csv, E:\private_work\A-kid\final_signals\final_signals.xlsx
+2026-06-28 16:48:44 INFO 沪深300低于20日线，最多持仓3只
+2026-06-28 16:48:44 INFO 最终信号已保存: rows=0, E:\private_work\A-kid\final_signals\final_signals.csv, E:\private_work\A-kid\final_signals\final_signals.xlsx
+2026-06-28 16:51:57 INFO 沪深300低于20日线，最多持仓3只
+2026-06-28 16:51:57 INFO 最终信号已保存: rows=3, E:\private_work\A-kid\final_signals\final_signals.csv, E:\private_work\A-kid\final_signals\final_signals.xlsx
+2026-06-28 16:54:56 INFO 固定输出概率前10，不应用沪深300仓位限制
+2026-06-28 16:54:56 INFO 最终信号已保存: rows=10, E:\private_work\A-kid\final_signals\final_signals.csv, E:\private_work\A-kid\final_signals\final_signals.xlsx
+2026-06-28 17:27:01 INFO 趋势过滤: 候选 417 -> 179（剔除下跌趋势股票）
+2026-06-28 17:27:01 INFO 固定输出概率前10，已应用趋势过滤(站上20/60日线+20日涨幅>0)
+2026-06-28 17:27:02 INFO 最终信号已保存: rows=10, E:\private_work\A-kid\final_signals\final_signals.csv, E:\private_work\A-kid\final_signals\final_signals.xlsx
+2026-06-28 17:40:44 INFO 趋势过滤: 候选 417 -> 179（剔除下跌趋势股票）
+2026-06-28 17:40:44 INFO 固定输出概率前10，已应用趋势过滤(站上20/60日线+20日涨幅>0)
+2026-06-28 17:40:44 INFO 最终信号已保存: rows=10, E:\private_work\A-kid\final_signals\final_signals.csv, E:\private_work\A-kid\final_signals\final_signals.xlsx
+2026-06-28 18:13:46 INFO 固定输出概率前10，未应用趋势过滤
+2026-06-28 18:13:46 INFO 最终信号已保存: rows=10, E:\private_work\A-kid\final_signals\final_signals.csv, E:\private_work\A-kid\final_signals\final_signals.xlsx
+2026-06-28 19:20:06 INFO 固定输出概率前10，未应用趋势过滤
+2026-06-28 19:20:06 INFO 最终信号已保存: rows=10, E:\private_work\A-kid\final_signals\final_signals.csv, E:\private_work\A-kid\final_signals\final_signals.xlsx
+2026-06-28 21:14:41 INFO 固定输出概率前10，未应用趋势过滤
+2026-06-28 21:14:41 INFO 最终信号已保存: rows=10, E:\private_work\A-kid\final_signals\final_signals.csv, E:\private_work\A-kid\final_signals\final_signals.xlsx
