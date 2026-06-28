@@ -82,6 +82,7 @@ def daily_pipeline(args: argparse.Namespace) -> None:
     run_step("第6步 生成最终信号", signal_args)
     # 登记当日Top10到台账，并回填已满两个交易日的历史信号、输出跟踪报告。
     run_step("跟踪 登记信号+回填真实涨跌", ["track_performance.py"])
+    run_step("看板 生成 dashboard.html", ["build_dashboard.py"])
 
 
 def weekly_pipeline(args: argparse.Namespace) -> None:
@@ -97,6 +98,7 @@ def weekly_pipeline(args: argparse.Namespace) -> None:
         signal_args.append("--trend-filter")
     run_step("第6步 生成最终信号", signal_args)
     run_step("跟踪 登记信号+回填真实涨跌", ["track_performance.py"])
+    run_step("看板 生成 dashboard.html", ["build_dashboard.py"])
     if not args.skip_backtest:
         run_step("第7步 T+1 回测复盘", ["t1_backtest.py"])
 

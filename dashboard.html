@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>A股选股策略看板</title>
+<style>
+:root{--bg:#0f1419;--card:#1a212b;--line:#2a3441;--txt:#e6edf3;--mut:#8b97a7;--up:#f0524c;--dn:#2ea043;--accent:#4493f8;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--txt);font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;font-size:14px;line-height:1.5;padding:20px;}
+h1{font-size:20px;margin-bottom:4px;}
+h2{font-size:15px;margin:0 0 12px;color:var(--accent);font-weight:600;}
+.sub{color:var(--mut);font-size:12px;margin-bottom:20px;}
+.grid{display:grid;gap:16px;}
+.cards{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;}
+.metric .label{color:var(--mut);font-size:12px;}
+.metric .value{font-size:24px;font-weight:700;margin-top:4px;}
+.section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin-top:16px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th,td{text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;}
+th{color:var(--mut);font-weight:600;position:sticky;top:0;background:var(--card);}
+td.l,th.l{text-align:left;}
+.up{color:var(--up);} .dn{color:var(--dn);} .mut{color:var(--mut);}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:12px;}
+.tag.win{background:rgba(240,82,76,.15);color:var(--up);}
+.tag.lose{background:rgba(46,160,67,.15);color:var(--dn);}
+.tag.pend{background:rgba(139,151,167,.15);color:var(--mut);}
+.scroll{max-height:520px;overflow:auto;}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:12px;}
+.bar-row .d{width:84px;color:var(--mut);}
+.bar-track{flex:1;background:#0c1117;border-radius:4px;height:18px;position:relative;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;}
+.bar-row .v{width:96px;text-align:right;}
+.warn{background:rgba(240,82,76,.12);border:1px solid var(--up);border-radius:8px;padding:10px 14px;margin-top:12px;color:var(--up);font-size:13px;}
+.ok{background:rgba(46,160,67,.10);border:1px solid var(--dn);border-radius:8px;padding:10px 14px;margin-top:12px;color:var(--dn);font-size:13px;}
+.empty{color:var(--mut);padding:24px;text-align:center;}
+.filters{margin-bottom:10px;}
+select{background:#0c1117;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:13px;}
+</style>
+</head>
+<body>
+<h1>A股选股策略看板</h1>
+<div class="sub" id="meta"></div>
+<div id="alert"></div>
+<div class="section"><h2 id="today-title">今日信号 Top10</h2><div id="today"></div></div>
+<div class="grid cards" id="summary"></div>
+<div class="section"><h2>近一月每日命中率</h2><div id="byday"></div></div>
+<div class="section"><h2>概率校准（模型说的概率 vs 真实命中率）</h2><div id="calib"></div></div>
+<div class="section">
+  <h2>历史台账明细（每日10只 + 真实涨跌）</h2>
+  <div class="filters">信号日：<select id="dayFilter"></select></div>
+  <div class="scroll" id="ledger"></div>
+</div>
+<script>
+const DATA = {"generated_at": "2026-06-28 22:38:50", "model_meta": {"trained_at": "2026-06-28 19:19:17", "train_start": "2023-12-27", "train_end": "2026-06-24", "train_window_days": 600, "train_rows": 364500, "cross_sectional_rank": true, "factor_columns": ["return_1d", "return_2d", "return_3d", "close_ma5_pos", "close_ma10_pos", "close_ma20_pos", "close_ma60_pos", "ma_arrangement", "high_20d_breakout", "macd_dif", "macd_dea", "macd_hist", "macd_dif_positive", "macd_dea_positive", "volume_ratio_5", "volume_ratio_10", "volume_ratio_20", "amount_ratio_20", "turnover_amount_1d_change", "price_volume_corr_10", "volume_shrink_candle", "return_5d", "return_10d", "return_20d", "up_days_ratio_5", "rsi_14", "atr_14", "atr_14_pct", "volatility_20d", "distance_to_20d_high", "distance_to_20d_low", "pos_60d_range", "open_to_close_return", "high_to_close_return", "low_to_close_return", "upper_shadow_ratio", "lower_shadow_ratio", "intraday_range_body_ratio", "intraday_amplitude", "hs300_return_20d", "relative_hs300_return_20d"], "n_estimators_effective": 300}, "signals": [{"日期": "2026-06-26", "股票代码": 601133, "名称": "柏诚股份", "上涨概率": 0.7997707591270826, "总市值": 20143034877.0, "成交额": 1387134570.0, "生成时间": "2026-06-28 21:14:41", "市场环境": "固定输出概率前10，未应用趋势过滤"}, {"日期": "2026-06-26", "股票代码": 600552, "名称": "凯盛科技", "上涨概率": 0.7902407809492015, "总市值": 27960364062.0, "成交额": 4468506492.0, "生成时间": "2026-06-28 21:14:41", "市场环境": "固定输出概率前10，未应用趋势过滤"}, {"日期": "2026-06-26", "股票代码": 603650, "名称": "彤程新材", "上涨概率": 0.7627461930857415, "总市值": 52878401315.0, "成交额": 3051419862.0, "生成时间": "2026-06-28 21:14:41", "市场环境": "固定输出概率前10，未应用趋势过滤"}, {"日期": "2026-06-26", "股票代码": 605376, "名称": "博迁新材", "上涨概率": 0.7409865586436212, "总市值": 69062400000.0, "成交额": 5256598778.0, "生成时间": "2026-06-28 21:14:41", "市场环境": "固定输出概率前10，未应用趋势过滤"}, {"日期": "2026-06-26", "股票代码": 600667, "名称": "太极实业", "上涨概率": 0.7376697757650383, "总市值": 56220653745.0, "成交额": 14488683792.0, "生成时间": "2026-06-28 21:14:41", "市场环境": "固定输出概率前10，未应用趋势过滤"}, {"日期": "2026-06-26", "股票代码": 301392, "名称": "汇成真空", "上涨概率": 0.7333465047731755, "总市值": 24380000000.0, "成交额": 2519389634.04, "生成时间": "2026-06-28 21:14:41", "市场环境": "固定输出概率前10，未应用趋势过滤"}, {"日期": "2026-06-26", "股票代码": 301526, "名称": "国际复材", "上涨概率": 0.7328269008255152, "总市值": 197103795569.0, "成交额": 9227403441.52, "生成时间": "2026-06-28 21:14:41", "市场环境": "固定输出概率前10，未应用趋势过滤"}, {"日期": "2026-06-26", "股票代码": 301319, "名称": "唯特偶", "上涨概率": 0.7301843825176506, "总市值": 37641117222.0, "成交额": 2110140670.38, "生成时间": "2026-06-28 21:14:41", "市场环境": "固定输出概率前10，未应用趋势过滤"}, {"日期": "2026-06-26", "股票代码": 603115, "名称": "海星股份", "上涨概率": 0.7270666593471298, "总市值": 28591445280.0, "成交额": 1430686957.0, "生成时间": "2026-06-28 21:14:41", "市场环境": "固定输出概率前10，未应用趋势过滤"}, {"日期": "2026-06-26", "股票代码": 603938, "名称": "三孚股份", "上涨概率": 0.7256603310831369, "总市值": 29006763118.0, "成交额": 3397622165.0, "生成时间": "2026-06-28 21:14:41", "市场环境": "固定输出概率前10，未应用趋势过滤"}], "ledger": [{"信号日": "2026-06-26", "股票代码": 601133, "名称": "柏诚股份", "上涨概率": 0.7997707591270826, "信号日收盘": NaN, "买入日": NaN, "买入开盘": NaN, "卖出日": NaN, "卖出收盘": NaN, "标签口径收益": NaN, "交易口径净收益": NaN, "命中(标签>=3%)": NaN, "盈利(交易>0)": NaN, "状态": "待结算"}, {"信号日": "2026-06-26", "股票代码": 600552, "名称": "凯盛科技", "上涨概率": 0.7902407809492015, "信号日收盘": NaN, "买入日": NaN, "买入开盘": NaN, "卖出日": NaN, "卖出收盘": NaN, "标签口径收益": NaN, "交易口径净收益": NaN, "命中(标签>=3%)": NaN, "盈利(交易>0)": NaN, "状态": "待结算"}, {"信号日": "2026-06-26", "股票代码": 603650, "名称": "彤程新材", "上涨概率": 0.7627461930857415, "信号日收盘": NaN, "买入日": NaN, "买入开盘": NaN, "卖出日": NaN, "卖出收盘": NaN, "标签口径收益": NaN, "交易口径净收益": NaN, "命中(标签>=3%)": NaN, "盈利(交易>0)": NaN, "状态": "待结算"}, {"信号日": "2026-06-26", "股票代码": 605376, "名称": "博迁新材", "上涨概率": 0.7409865586436212, "信号日收盘": NaN, "买入日": NaN, "买入开盘": NaN, "卖出日": NaN, "卖出收盘": NaN, "标签口径收益": NaN, "交易口径净收益": NaN, "命中(标签>=3%)": NaN, "盈利(交易>0)": NaN, "状态": "待结算"}, {"信号日": "2026-06-26", "股票代码": 600667, "名称": "太极实业", "上涨概率": 0.7376697757650383, "信号日收盘": NaN, "买入日": NaN, "买入开盘": NaN, "卖出日": NaN, "卖出收盘": NaN, "标签口径收益": NaN, "交易口径净收益": NaN, "命中(标签>=3%)": NaN, "盈利(交易>0)": NaN, "状态": "待结算"}, {"信号日": "2026-06-26", "股票代码": 301392, "名称": "汇成真空", "上涨概率": 0.7333465047731755, "信号日收盘": NaN, "买入日": NaN, "买入开盘": NaN, "卖出日": NaN, "卖出收盘": NaN, "标签口径收益": NaN, "交易口径净收益": NaN, "命中(标签>=3%)": NaN, "盈利(交易>0)": NaN, "状态": "待结算"}, {"信号日": "2026-06-26", "股票代码": 301526, "名称": "国际复材", "上涨概率": 0.7328269008255152, "信号日收盘": NaN, "买入日": NaN, "买入开盘": NaN, "卖出日": NaN, "卖出收盘": NaN, "标签口径收益": NaN, "交易口径净收益": NaN, "命中(标签>=3%)": NaN, "盈利(交易>0)": NaN, "状态": "待结算"}, {"信号日": "2026-06-26", "股票代码": 301319, "名称": "唯特偶", "上涨概率": 0.7301843825176506, "信号日收盘": NaN, "买入日": NaN, "买入开盘": NaN, "卖出日": NaN, "卖出收盘": NaN, "标签口径收益": NaN, "交易口径净收益": NaN, "命中(标签>=3%)": NaN, "盈利(交易>0)": NaN, "状态": "待结算"}, {"信号日": "2026-06-26", "股票代码": 603115, "名称": "海星股份", "上涨概率": 0.7270666593471298, "信号日收盘": NaN, "买入日": NaN, "买入开盘": NaN, "卖出日": NaN, "卖出收盘": NaN, "标签口径收益": NaN, "交易口径净收益": NaN, "命中(标签>=3%)": NaN, "盈利(交易>0)": NaN, "状态": "待结算"}, {"信号日": "2026-06-26", "股票代码": 603938, "名称": "三孚股份", "上涨概率": 0.7256603310831369, "信号日收盘": NaN, "买入日": NaN, "买入开盘": NaN, "卖出日": NaN, "卖出收盘": NaN, "标签口径收益": NaN, "交易口径净收益": NaN, "命中(标签>=3%)": NaN, "盈利(交易>0)": NaN, "状态": "待结算"}], "summary": [], "by_day": [], "calibration": [], "recent_days": 30};
+// ---- helpers ----
+const $ = id => document.getElementById(id);
+const num = (v,d=2) => (v===null||v===undefined||v==="")?"-":Number(v).toFixed(d);
+const pct = (v,d=1) => (v===null||v===undefined||v==="")?"-":(Number(v)*100).toFixed(d)+"%";
+const cls = v => (v===null||v===undefined||v==="")?"":(Number(v)>0?"up":(Number(v)<0?"dn":""));
+function code6(v){ const s=String(v==null?"":v).replace(/\D/g,""); return s.padStart(6,"0").slice(-6); }
+function yi(v){ return (v===null||v===undefined||v==="")?"-":(Number(v)/1e8).toFixed(1)+"亿"; }
+// ---- meta ----
+(function(){
+  const m = DATA.model_meta||{};
+  let s = "生成时间 "+DATA.generated_at;
+  if(m.train_end) s += " ｜ 模型训练截止 "+m.train_end;
+  if(m.train_rows) s += " ｜ 训练样本 "+m.train_rows;
+  $("meta").textContent = s;
+})();
+
+// ---- today's signals ----
+(function(){
+  const rows = DATA.signals||[];
+  if(!rows.length){ $("today").innerHTML='<div class="empty">暂无今日信号</div>'; return; }
+  $("today-title").textContent = "今日信号 Top10　（信号日 "+(rows[0]["日期"]||"")+"）";
+  let h='<table><thead><tr><th>#</th><th class="l">代码</th><th class="l">名称</th><th>上涨概率</th><th>总市值</th><th>成交额</th></tr></thead><tbody>';
+  rows.forEach((r,i)=>{
+    h+='<tr><td class="mut">'+(i+1)+'</td><td class="l">'+code6(r["股票代码"])+'</td><td class="l">'+(r["名称"]||"")
+      +'</td><td><b>'+pct(r["上涨概率"],1)+'</b></td><td>'+yi(r["总市值"])+'</td><td>'+yi(r["成交额"])+'</td></tr>';
+  });
+  $("today").innerHTML = h+'</tbody></table>';
+})();
+
+// ---- summary cards + decay alert ----
+(function(){
+  const s = (DATA.summary&&DATA.summary[0])||null;
+  if(!s){ $("summary").innerHTML='<div class="card empty">暂无已结算的跟踪数据（信号需满两个交易日后才有真实涨跌）</div>'; return; }
+  const items = [];
+  for(const k in s){
+    let v = s[k], disp;
+    if(k.indexOf("命中率")>=0||k.indexOf("胜率")>=0) disp = pct(v,1);
+    else if(k.indexOf("收益")>=0) disp = pct(v,2);
+    else disp = (v===null?"-":v);
+    items.push('<div class="card metric"><div class="label">'+k+'</div><div class="value">'+disp+'</div></div>');
+  }
+  $("summary").innerHTML = items.join("");
+  // 衰减预警：找滚动命中率字段
+  let rollKey=Object.keys(s).find(k=>k.indexOf("滚动命中率")>=0);
+  if(rollKey && s[rollKey]!==null){
+    const hit=Number(s[rollKey]);
+    if(hit<0.25) $("alert").innerHTML='<div class="warn">⚠ 模型衰减预警：'+rollKey+' '+pct(hit)+' 低于 25%（回测基准约33%）。建议尽快 run_strategy.py --mode weekly 重训并复盘因子。</div>';
+    else $("alert").innerHTML='<div class="ok">模型状态正常：'+rollKey+' '+pct(hit)+' ≥ 25%。</div>';
+  }
+})();
+// ---- by-day hit rate bars ----
+(function(){
+  const rows = DATA.by_day||[];
+  if(!rows.length){ $("byday").innerHTML='<div class="empty">暂无每日表现数据</div>'; return; }
+  let h="";
+  rows.slice().reverse().forEach(r=>{
+    const hit = r["命中率"]==null?0:Number(r["命中率"]);
+    const w = Math.max(2, Math.min(100, hit*100));
+    const color = hit>=0.33 ? "var(--up)" : (hit>=0.2 ? "#d8a000" : "var(--dn)");
+    h+='<div class="bar-row"><div class="d">'+r["信号日"]+'</div><div class="bar-track">'
+      +'<div class="bar-fill" style="width:'+w+'%;background:'+color+'"></div></div>'
+      +'<div class="v">'+pct(r["命中率"],1)+' ('+(r["只数"]||0)+'只)</div></div>';
+  });
+  $("byday").innerHTML = h;
+})();
+
+// ---- calibration ----
+(function(){
+  const rows = DATA.calibration||[];
+  if(!rows.length){ $("calib").innerHTML='<div class="empty">样本不足，暂无校准曲线（已结算样本≥20才计算）</div>'; return; }
+  let h='<table><thead><tr><th class="l">概率分桶</th><th>平均预测概率</th><th>真实命中率</th><th>样本数</th></tr></thead><tbody>';
+  rows.forEach(r=>{
+    h+='<tr><td class="l mut">'+(r["概率桶"]||"")+'</td><td>'+pct(r["平均预测概率"],1)+'</td><td><b>'
+      +pct(r["真实命中率"],1)+'</b></td><td>'+(r["样本数"]||0)+'</td></tr>';
+  });
+  $("calib").innerHTML = h+'</tbody></table>';
+})();
+
+// ---- ledger with day filter ----
+(function(){
+  const all = DATA.ledger||[];
+  const sel = $("dayFilter");
+  if(!all.length){ $("ledger").innerHTML='<div class="empty">台账为空</div>'; return; }
+  const days = [...new Set(all.map(r=>r["信号日"]))].sort().reverse();
+  sel.innerHTML = '<option value="__all__">全部（'+all.length+'条）</option>'
+    + days.map(d=>'<option value="'+d+'">'+d+'</option>').join("");
+  function statusTag(r){
+    if(r["状态"]!=="已结算") return '<span class="tag pend">待结算</span>';
+    const hit = r["命中(标签>=3%)"];
+    return hit==1 ? '<span class="tag win">命中</span>' : '<span class="tag lose">未中</span>';
+  }
+  function render(day){
+    const rows = day==="__all__" ? all : all.filter(r=>r["信号日"]===day);
+    let h='<table><thead><tr><th class="l">信号日</th><th class="l">代码</th><th class="l">名称</th><th>预测概率</th>'
+      +'<th>标签2日涨幅</th><th>交易净收益</th><th class="l">结果</th></tr></thead><tbody>';
+    rows.forEach(r=>{
+      h+='<tr><td class="l mut">'+r["信号日"]+'</td><td class="l">'+code6(r["股票代码"])+'</td><td class="l">'+(r["名称"]||"")
+        +'</td><td>'+pct(r["上涨概率"],1)+'</td>'
+        +'<td class="'+cls(r["标签口径收益"])+'">'+pct(r["标签口径收益"],2)+'</td>'
+        +'<td class="'+cls(r["交易口径净收益"])+'">'+pct(r["交易口径净收益"],2)+'</td>'
+        +'<td class="l">'+statusTag(r)+'</td></tr>';
+    });
+    $("ledger").innerHTML = h+'</tbody></table>';
+  }
+  sel.addEventListener("change",()=>render(sel.value));
+  render("__all__");
+})();
+</script>
+</body>
+</html>

@@ -42,10 +42,15 @@
 
 ## 四、每天看哪个文件
 
-- **最终交易信号**：`final_signals/final_signals.csv` 和 `final_signals.xlsx`
+- **浏览器看板（推荐）**：直接双击打开 `dashboard.html`。无需服务器、无需联网，包含：
+  今日 Top10、近一月每日命中率、整体/滚动指标、概率校准、可按日期筛选的历史台账明细。
+  daily/weekly 流程会每天自动重新生成它，打开看到的永远是最新数据。
+- **最终交易信号（CSV/Excel）**：`final_signals/final_signals.csv` 和 `final_signals.xlsx`
   （含：代码、名称、上涨概率、市值、成交额、生成时间）
 - 全部候选打分：`model_outputs/latest_predictions_all.csv`
 - 运行日志：`model_outputs/run_strategy.log`
+
+> 看板单独重新生成（一般不用，流程会自动跑）：`.venv/Scripts/python.exe build_dashboard.py`
 
 ## 五、每周复盘看什么
 
