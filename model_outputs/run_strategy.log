@@ -13,3 +13,20 @@
 2026-06-28 21:14:42 INFO ✔ 完成: 跟踪 登记信号+回填真实涨跌  耗时 0.5 秒
 2026-06-28 21:14:42 INFO === 全部完成 mode=daily, 总耗时 763.4 秒 ===
 2026-06-28 21:14:42 INFO 最终信号: E:\private_work\A-kid\final_signals\final_signals.csv
+2026-06-29 17:30:00 INFO === 策略运行开始 mode=daily ===
+2026-06-29 17:30:00 INFO ▶ 开始: 第1步 刷新股票池  ->  stock_pool_filter.py
+2026-06-29 17:31:14 INFO ✔ 完成: 第1步 刷新股票池  耗时 73.5 秒
+2026-06-29 17:31:14 INFO ▶ 开始: 第2步 增量下载最新日线  ->  download_stock_history.py --incremental
+2026-06-29 17:41:57 INFO ✔ 完成: 第2步 增量下载最新日线  耗时 643.6 秒
+2026-06-29 17:41:57 INFO ▶ 开始: 第3步 计算因子  ->  factor_engineering.py
+2026-06-29 17:42:48 INFO ✔ 完成: 第3步 计算因子  耗时 51.1 秒
+2026-06-29 17:42:48 INFO ▶ 开始: 每日预测 加载模型打分  ->  predict_daily.py
+2026-06-29 17:43:11 INFO ✔ 完成: 每日预测 加载模型打分  耗时 22.5 秒
+2026-06-29 17:43:11 INFO ▶ 开始: 第6步 生成最终信号  ->  signal_filter.py
+2026-06-29 17:43:12 INFO ✔ 完成: 第6步 生成最终信号  耗时 0.8 秒
+2026-06-29 17:43:12 INFO ▶ 开始: 跟踪 登记信号+回填真实涨跌  ->  track_performance.py
+2026-06-29 17:43:12 INFO ✔ 完成: 跟踪 登记信号+回填真实涨跌  耗时 0.5 秒
+2026-06-29 17:43:12 INFO ▶ 开始: 看板 生成 dashboard.html  ->  build_dashboard.py
+2026-06-29 17:43:13 INFO ✔ 完成: 看板 生成 dashboard.html  耗时 0.4 秒
+2026-06-29 17:43:13 INFO === 全部完成 mode=daily, 总耗时 792.4 秒 ===
+2026-06-29 17:43:13 INFO 最终信号: E:\private_work\A-kid\final_signals\final_signals.csv

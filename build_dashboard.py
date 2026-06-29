@@ -144,7 +144,7 @@ function yi(v){ return (v===null||v===undefined||v==="")?"-":(Number(v)/1e8).toF
 // ---- summary cards + decay alert ----
 (function(){
   const s = (DATA.summary&&DATA.summary[0])||null;
-  if(!s){ $("summary").innerHTML='<div class="card empty">暂无已结算的跟踪数据（信号需满两个交易日后才有真实涨跌）</div>'; return; }
+  if(!s){ $("summary").innerHTML='<div class="card empty">暂无已结算的跟踪数据（两天累计需满两个交易日后才纳入统计）</div>'; return; }
   const items = [];
   for(const k in s){
     let v = s[k], disp;
@@ -199,6 +199,7 @@ function yi(v){ return (v===null||v===undefined||v==="")?"-":(Number(v)/1e8).toF
   sel.innerHTML = '<option value="__all__">全部（'+all.length+'条）</option>'
     + days.map(d=>'<option value="'+d+'">'+d+'</option>').join("");
   function statusTag(r){
+    if(r["状态"]==="跟踪中") return '<span class="tag pend">跟踪中</span>';
     if(r["状态"]!=="已结算") return '<span class="tag pend">待结算</span>';
     const hit = r["命中(标签>=3%)"];
     return hit==1 ? '<span class="tag win">命中</span>' : '<span class="tag lose">未中</span>';
@@ -206,11 +207,13 @@ function yi(v){ return (v===null||v===undefined||v==="")?"-":(Number(v)/1e8).toF
   function render(day){
     const rows = day==="__all__" ? all : all.filter(r=>r["信号日"]===day);
     let h='<table><thead><tr><th class="l">信号日</th><th class="l">代码</th><th class="l">名称</th><th>预测概率</th>'
-      +'<th>标签2日涨幅</th><th>交易净收益</th><th class="l">结果</th></tr></thead><tbody>';
+      +'<th>第一天涨跌幅</th><th>第二天涨跌幅</th><th>两天累计</th><th>交易净收益</th><th class="l">结果</th></tr></thead><tbody>';
     rows.forEach(r=>{
       h+='<tr><td class="l mut">'+r["信号日"]+'</td><td class="l">'+code6(r["股票代码"])+'</td><td class="l">'+(r["名称"]||"")
         +'</td><td>'+pct(r["上涨概率"],1)+'</td>'
-        +'<td class="'+cls(r["标签口径收益"])+'">'+pct(r["标签口径收益"],2)+'</td>'
+        +'<td class="'+cls(r["第一天涨跌幅"])+'">'+pct(r["第一天涨跌幅"],2)+'</td>'
+        +'<td class="'+cls(r["第二天涨跌幅"])+'">'+pct(r["第二天涨跌幅"],2)+'</td>'
+        +'<td class="'+cls(r["两天累计涨幅"])+'">'+pct(r["两天累计涨幅"],2)+'</td>'
         +'<td class="'+cls(r["交易口径净收益"])+'">'+pct(r["交易口径净收益"],2)+'</td>'
         +'<td class="l">'+statusTag(r)+'</td></tr>';
     });
@@ -244,7 +247,7 @@ def collect_data(config: DashboardConfig) -> dict:
 
     # 台账：转成百分比、按信号日倒序，便于回看
     if not ledger.empty:
-        for col in ("标签口径收益", "交易口径净收益"):
+        for col in ("第一天涨跌幅", "第二天涨跌幅", "两天累计涨幅", "标签口径收益", "交易口径净收益"):
             if col in ledger.columns:
                 ledger[col] = pd.to_numeric(ledger[col], errors="coerce")
         if "信号日" in ledger.columns:
@@ -311,4 +314,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

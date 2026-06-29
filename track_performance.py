@@ -36,6 +36,7 @@ SELL_FEE_RATE = 0.0013
 LEDGER_COLUMNS = [
     "信号日", "股票代码", "名称", "上涨概率",
     "信号日收盘", "买入日", "买入开盘", "卖出日", "卖出收盘",
+    "第一天涨跌幅", "第二天涨跌幅", "两天累计涨幅",
     "标签口径收益", "交易口径净收益", "命中(标签>=3%)", "盈利(交易>0)", "状态",
 ]
 
@@ -141,6 +142,7 @@ def register_today(ledger: pd.DataFrame, config: TrackConfig) -> pd.DataFrame:
             "上涨概率": row.get("上涨概率", np.nan),
             "信号日收盘": np.nan, "买入日": np.nan, "买入开盘": np.nan,
             "卖出日": np.nan, "卖出收盘": np.nan,
+            "第一天涨跌幅": np.nan, "第二天涨跌幅": np.nan, "两天累计涨幅": np.nan,
             "标签口径收益": np.nan, "交易口径净收益": np.nan,
             "命中(标签>=3%)": np.nan, "盈利(交易>0)": np.nan, "状态": "待结算",
         })
@@ -156,7 +158,11 @@ def settle_pending(ledger: pd.DataFrame, config: TrackConfig) -> pd.DataFrame:
     # 新建台账时这些列可能被推断为 float，写入日期字符串会报 dtype 错，先统一为 object。
     for column in ["买入日", "卖出日", "名称", "状态"]:
         ledger[column] = ledger[column].astype(object)
-    pending = ledger[ledger["状态"] != "已结算"]
+    return_columns = ["第一天涨跌幅", "第二天涨跌幅", "两天累计涨幅"]
+    for column in ["信号日收盘", "买入开盘", "卖出收盘", *return_columns]:
+        ledger[column] = pd.to_numeric(ledger[column], errors="coerce")
+    pending = ledger
+    tracking_count = 0
     settled_count = 0
     price_cache: dict[str, pd.DataFrame | None] = {}
     for idx in pending.index:
@@ -171,25 +177,40 @@ def settle_pending(ledger: pd.DataFrame, config: TrackConfig) -> pd.DataFrame:
             continue
         on_signal = prices[prices["日期"] == signal_date]
         future = prices[prices["日期"] > signal_date].head(2)
-        if len(future) < 2:
-            continue  # 还没满两个交易日，下次再结算
-        buy_row, sell_row = future.iloc[0], future.iloc[1]
+        if len(future) < 1:
+            continue  # 还没到第一个交易日，下次再回填
+        buy_row = future.iloc[0]
         signal_close = float(on_signal.iloc[0]["收盘"]) if not on_signal.empty else np.nan
         buy_open = float(buy_row["开盘"])
-        sell_close = float(sell_row["收盘"])
-        label_ret = (sell_close / signal_close - 1.0) if signal_close and signal_close > 0 else np.nan
-        trade_ret = net_trade_return(buy_open, sell_close)
+        first_close = float(buy_row["收盘"])
+        first_ret = (first_close / buy_open - 1.0) if buy_open > 0 else np.nan
         ledger.at[idx, "信号日收盘"] = signal_close
         ledger.at[idx, "买入日"] = buy_row["日期"].strftime("%Y-%m-%d")
         ledger.at[idx, "买入开盘"] = buy_open
+        ledger.at[idx, "第一天涨跌幅"] = first_ret
+        if len(future) < 2:
+            ledger.at[idx, "状态"] = "跟踪中"
+            tracking_count += 1
+            continue
+        sell_row = future.iloc[1]
+        sell_open = float(sell_row["开盘"])
+        sell_close = float(sell_row["收盘"])
+        second_ret = (sell_close / sell_open - 1.0) if sell_open > 0 else np.nan
+        cumulative_ret = (sell_close / buy_open - 1.0) if buy_open > 0 else np.nan
+        label_ret = cumulative_ret
+        trade_ret = net_trade_return(buy_open, sell_close)
         ledger.at[idx, "卖出日"] = sell_row["日期"].strftime("%Y-%m-%d")
         ledger.at[idx, "卖出收盘"] = sell_close
+        ledger.at[idx, "第二天涨跌幅"] = second_ret
+        ledger.at[idx, "两天累计涨幅"] = cumulative_ret
         ledger.at[idx, "标签口径收益"] = label_ret
         ledger.at[idx, "交易口径净收益"] = trade_ret
         ledger.at[idx, "命中(标签>=3%)"] = int(label_ret >= config.threshold) if pd.notna(label_ret) else np.nan
         ledger.at[idx, "盈利(交易>0)"] = int(trade_ret > 0) if pd.notna(trade_ret) else np.nan
         ledger.at[idx, "状态"] = "已结算"
         settled_count += 1
+    if tracking_count:
+        LOGGER.info("回填第一个交易日涨跌 %d 条信号。", tracking_count)
     if settled_count:
         LOGGER.info("回填结算 %d 条历史信号。", settled_count)
     return ledger
